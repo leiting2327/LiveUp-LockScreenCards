@@ -1,0 +1,61 @@
+name: Build IPA
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Xcode 版本
+        run: xcodebuild -version
+
+      - name: 安装 XcodeGen
+        run: brew install xcodegen
+
+      - name: 生成 Xcode 工程
+        run: xcodegen generate
+
+      - name: 编译（无签名）
+        run: |
+          xcodebuild \
+            -project LiveUp.xcodeproj \
+            -scheme LiveUp \
+            -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+
+      - name: 打包 IPA
+        run: |
+          APP=$(find build/Build/Products/Release-iphoneos -maxdepth 1 -name "*.app" | head -1)
+          echo "打包：$APP"
+          rm -rf Payload LiveUp.ipa
+          mkdir -p Payload
+          cp -R "$APP" Payload/
+          zip -r LiveUp.ipa Payload
+          ls -la LiveUp.ipa
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: LiveUp-ipa
+          path: LiveUp.ipa
+          if-no-files-found: error
+
+      - name: 发布 Release 并附带 IPA
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="v${GITHUB_RUN_NUMBER}"
+          gh release create "$TAG" LiveUp.ipa \
+            --title "LiveUp IPA（未签名）构建 #${GITHUB_RUN_NUMBER}" \
+            --notes "未签名 IPA：需用 Sideloadly / AltStore / 爱思助手 以你的 Apple ID 重签名后安装。iOS 17+。" || true
