@@ -5,6 +5,8 @@ options:
     iOS: "17.0"
   createIntermediateGroups: true
   developmentLanguage: zh-Hans
+  # 固定工程格式为 Xcode 15 可读（runner 上的 Xcode 15.4 读不了 Xcode16 的 77 格式）
+  xcodeVersion: "15.0"
 settings:
   base:
     SWIFT_VERSION: "5.0"
