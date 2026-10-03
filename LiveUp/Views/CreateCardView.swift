@@ -3,6 +3,20 @@ import PhotosUI
 import AVFoundation
 import UIKit
 
+/// 把 Mode 绑定转成可用的索引绑定，供 AnimatedSegmented 使用。
+extension Binding where Value == CreateCardView.Mode {
+    var rawValueIndex: Binding<Int> {
+        Binding<Int>(
+            get: { CreateCardView.Mode.allCases.firstIndex(of: wrappedValue) ?? 0 },
+            set: { newValue in
+                if CreateCardView.Mode.allCases.indices.contains(newValue) {
+                    wrappedValue = CreateCardView.Mode.allCases[newValue]
+                }
+            }
+        )
+    }
+}
+
 struct CreateCardView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var store: CardStore
@@ -39,10 +53,11 @@ struct CreateCardView: View {
         NavigationStack {
             Form {
                 Section {
-                    Picker("方式", selection: $mode) {
-                        ForEach(Mode.allCases) { Text($0.rawValue) }
-                    }
-                    .pickerStyle(.segmented)
+                    AnimatedSegmented(
+                        options: Mode.allCases.map(\.rawValue),
+                        selection: $mode.rawValueIndex
+                    )
+                    .listRowInsets(EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12))
                 }
 
                 switch mode {
@@ -50,6 +65,7 @@ struct CreateCardView: View {
                 case .photo: photoSection
                 case .voice: voiceSection
                 }
+                .animation(.default, value: mode)
 
                 Section("自动移除") {
                     Picker("多久后自动取下锁屏", selection: $autoRemove) {
