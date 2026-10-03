@@ -9,12 +9,11 @@ struct CardsTabView: View {
         NavigationStack {
             Group {
                 if store.cards.isEmpty {
-                    ContentUnavailableView(
-                        "还没有锁屏卡片",
-                        systemImage: "lock.square",
-                        description: Text("新建一张卡片，它会钉在锁屏上，抬手就能看到。")
-                    )
-                    .actions {
+                    ContentUnavailableView {
+                        Label("还没有锁屏卡片", systemImage: "lock.square")
+                    } description: {
+                        Text("新建一张卡片，它会钉在锁屏上，抬手就能看到。")
+                    } actions: {
                         Button("新建卡片") { showCreate = true }
                             .buttonStyle(.borderedProminent)
                             .controlSize(.large)
