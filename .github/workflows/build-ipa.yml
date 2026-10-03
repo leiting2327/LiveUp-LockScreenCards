@@ -7,15 +7,18 @@ on:
 
 jobs:
   build:
-    runs-on: macos-15
+    runs-on: macos-latest
     permissions:
       contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Xcode 版本
-        run: xcodebuild -version
+      - name: Xcode 与 SDK 版本
+        run: |
+          xcodebuild -version
+          echo "--- iOS SDK ---"
+          xcodebuild -showsdks | grep -i iphoneos
 
       - name: 安装 XcodeGen
         run: brew install xcodegen
