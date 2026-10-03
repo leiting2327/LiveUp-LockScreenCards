@@ -34,6 +34,7 @@ struct CreateCardView: View {
 
     // 通用
     @State private var autoRemove = 0
+    @State private var showEmptyAlert = false
     var body: some View {
         NavigationStack {
             Form {
@@ -67,9 +68,14 @@ struct CreateCardView: View {
                     Button("取消") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
+                    // 永远可点：内容为空时自动用剪贴板，实在没有就弹提示
                     Button("创建") { create() }
-                        .disabled(!canCreate)
                 }
+            }
+            .alert("还没有可创建的内容", isPresented: $showEmptyAlert) {
+                Button("知道了", role: .cancel) {}
+            } message: {
+                Text("请在输入框填写要记的事，或先复制一条取件码/验证码短信。")
             }
             .task(id: pickedPhoto) {
                 guard let pickedPhoto else { return }
@@ -170,20 +176,42 @@ struct CreateCardView: View {
 
     private func create() {
         let minutes = autoRemove > 0 ? autoRemove : nil
+
         switch mode {
         case .text:
-            let parsed = SMSParser.parse(text)
+            // 内容为空时自动尝试剪贴板里的取件码/验证码
+            var content = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            if content.isEmpty, let s = UIPasteboard.general.string,
+               SMSParser.containsCode(s) {
+                content = s
+                text = s
+            }
+            if content.isEmpty {
+                showEmptyAlert = true
+                return
+            }
+            let parsed = SMSParser.parse(content)
             store.addCard(ReminderCard(
                 title: parsed.title, detail: parsed.detail, emoji: parsed.emoji,
                 kind: .text, autoRemoveAfterMinutes: minutes))
         case .photo:
-            let parsed = SMSParser.parse(recognizedText)
+            let content = recognizedText.trimmingCharacters(in: .whitespacesAndNewlines)
+            if content.isEmpty {
+                showEmptyAlert = true
+                return
+            }
+            let parsed = SMSParser.parse(content)
             store.addCard(ReminderCard(
                 title: parsed.title, detail: parsed.detail, emoji: parsed.emoji,
                 kind: .photo, autoRemoveAfterMinutes: minutes))
         case .voice:
+            let content = voiceText.trimmingCharacters(in: .whitespacesAndNewlines)
+            if content.isEmpty {
+                showEmptyAlert = true
+                return
+            }
             store.addCard(ReminderCard(
-                title: voiceText, detail: nil, emoji: "🎤",
+                title: content, detail: nil, emoji: "🎤",
                 kind: .voice, autoRemoveAfterMinutes: minutes))
         }
         dismiss()

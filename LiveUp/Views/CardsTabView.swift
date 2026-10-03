@@ -14,6 +14,11 @@ struct CardsTabView: View {
                         systemImage: "lock.square",
                         description: Text("新建一张卡片，它会钉在锁屏上，抬手就能看到。")
                     )
+                    .actions {
+                        Button("新建卡片") { showCreate = true }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.large)
+                    }
                 } else {
                     List {
                         ForEach(store.cards) { card in
