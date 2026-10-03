@@ -1,10 +1,12 @@
 import SwiftUI
 import PhotosUI
 import AVFoundation
+import UIKit
 
 struct CreateCardView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var store: CardStore
+    @AppStorage("defaultAutoRemoveMinutes") private var defaultAutoRemoveMinutes = 0
 
     enum Mode: String, CaseIterable, Identifiable {
         case text = "文字"
@@ -32,7 +34,6 @@ struct CreateCardView: View {
 
     // 通用
     @State private var autoRemove = 0
-
     var body: some View {
         NavigationStack {
             Form {
@@ -80,6 +81,15 @@ struct CreateCardView: View {
             }
             .task {
                 _ = await VoiceTranscriber.requestAuthorization()
+            }
+            .onAppear {
+                // 用设置里的默认自动移除时长
+                autoRemove = defaultAutoRemoveMinutes
+                // 自动识别剪贴板里的取件码/验证码
+                if text.isEmpty, let s = UIPasteboard.general.string,
+                   SMSParser.containsCode(s) {
+                    text = s
+                }
             }
             .onDisappear {
                 recorder?.stop()
