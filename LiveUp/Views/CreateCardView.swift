@@ -60,10 +60,12 @@ struct CreateCardView: View {
                     .listRowInsets(EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12))
                 }
 
-                switch mode {
-                case .text: textSection
-                case .photo: photoSection
-                case .voice: voiceSection
+                Group {
+                    switch mode {
+                    case .text: textSection
+                    case .photo: photoSection
+                    case .voice: voiceSection
+                    }
                 }
                 .animation(.default, value: mode)
 
