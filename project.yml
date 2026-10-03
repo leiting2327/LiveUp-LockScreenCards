@@ -11,8 +11,8 @@ settings:
     GENERATE_INFOPLIST_FILE: NO
     CODE_SIGN_STYLE: Automatic
     ENABLE_USER_SCRIPT_SANDBOXING: YES
-    CURRENT_PROJECT_VERSION: 5
-    MARKETING_VERSION: 1.2.2
+    CURRENT_PROJECT_VERSION: 6
+    MARKETING_VERSION: 1.3.0
 
 targets:
   LiveUp:
@@ -33,6 +33,8 @@ targets:
     dependencies:
       - target: LiveUpWidget
         embed: true
+      - target: LiveUpShareExtension
+        embed: true
 
   LiveUpWidget:
     type: app-extension
@@ -49,12 +51,30 @@ targets:
         APPLICATION_EXTENSION_API_ONLY: YES
         SKIP_INSTALL: YES
 
+  LiveUpShareExtension:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: LiveUpShareExtension
+      - path: Shared
+      - path: LiveUp/SMSParser.swift
+      - path: LiveUp/OCR.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.LiveUp.Share
+        PRODUCT_NAME: LiveUpShare
+        INFOPLIST_FILE: LiveUpShareExtension/Info.plist
+        CODE_SIGN_ENTITLEMENTS: LiveUpShareExtension/LiveUpShareExtension.entitlements
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
+
 schemes:
   LiveUp:
     build:
       targets:
         LiveUp: all
         LiveUpWidget: all
+        LiveUpShareExtension: all
     run:
       config: Release
     archive:
